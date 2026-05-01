@@ -1,4 +1,4 @@
-import { Calendar, Edit, Github, Link as LinkIcon, MapPin } from 'lucide-react'
+import { Calendar, Edit, GitBranch, Link as LinkIcon, MapPin } from 'lucide-react'
 import { currentUser, topNotes } from '../data/mockData.js'
 import { NoteGrid, Tabs } from './Explore.jsx'
 
@@ -12,7 +12,7 @@ export default function Profile() {
           <h1>{currentUser.name}</h1>
           <p className="accent-text">{currentUser.role}</p>
           <p>Full-stack developer passionate about DSA and system design. Sharing what I learn in public.</p>
-          <div className="profile-meta"><span><MapPin size={13} /> India</span><span><Github size={13} /> github.com/aniketsingh</span><span><LinkIcon size={13} /> aniket.dev</span><span><Calendar size={13} /> Joined Jan 2024</span></div>
+          <div className="profile-meta"><span><MapPin size={13} /> India</span><span><GitBranch size={13} /> github.com/aniketsingh</span><span><LinkIcon size={13} /> aniket.dev</span><span><Calendar size={13} /> Joined Jan 2024</span></div>
         </div>
         <button className="btn btn-secondary"><Edit size={14} /> Edit Profile</button>
       </section>

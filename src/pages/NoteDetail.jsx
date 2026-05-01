@@ -1,4 +1,4 @@
-import { ArrowLeft, Bookmark, Calendar, Eye, Github, Heart, Share2, Star } from 'lucide-react'
+import { ArrowLeft, Bookmark, Calendar, Eye, GitBranch, Heart, Share2, Star } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { topNotes } from '../data/mockData.js'
 
@@ -53,10 +53,10 @@ export default function NoteDetail() {
 
         <aside className="detail-rail">
           <section className="card">
-            <h3><Github size={16} /> Connected Repository</h3>
+            <h3><GitBranch size={16} /> Connected Repository</h3>
             <p className="repo-name">{note.repo}</p>
             <p className="muted"><Star size={12} /> {note.stars} stars - Updated {note.repoUpdated}</p>
-            <button className="btn btn-secondary full"><Github size={14} /> View on GitHub</button>
+            <button className="btn btn-secondary full"><GitBranch size={14} /> View on GitHub</button>
           </section>
           <section className="card">
             <h3>Table of Contents</h3>

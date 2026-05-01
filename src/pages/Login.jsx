@@ -1,4 +1,4 @@
-import { Code2, Github, Lock, Mail } from 'lucide-react'
+import { Code2, GitBranch } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Field } from './Upload.jsx'
 
@@ -13,7 +13,7 @@ export function AuthShell({ title, subtitle, children }) {
         <Link to="/" className="auth-logo"><span><Code2 size={20} /></span> CodeShelf</Link>
         <h1>{title}</h1>
         <p>{subtitle}</p>
-        <button className="btn btn-secondary full"><Github size={16} /> Continue with GitHub</button>
+        <button className="btn btn-secondary full"><GitBranch size={16} /> Continue with GitHub</button>
         <div className="auth-divider"><span>or</span></div>
         {children}
       </section>

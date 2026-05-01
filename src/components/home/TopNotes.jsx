@@ -1,4 +1,4 @@
-import { Code, Database, Eye, FileText, Github, Heart, Star } from 'lucide-react'
+import { Code, Database, Eye, FileText, GitBranch, Heart, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { topNotes } from '../../data/mockData.js'
 
@@ -42,7 +42,7 @@ export default function TopNotes() {
         })}
         <article className="github-feature-card">
           <div className="github-feature-header">
-            <Github size={22} />
+            <GitBranch size={22} />
             <div>
               <h3>Featured Repository</h3>
               <p>github.com/adityaverma/dp</p>

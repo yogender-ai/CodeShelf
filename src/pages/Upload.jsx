@@ -1,4 +1,4 @@
-import { Github, Plus, Upload as UploadIcon, X } from 'lucide-react'
+import { Plus, Upload as UploadIcon, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Upload() {

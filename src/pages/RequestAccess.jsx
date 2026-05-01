@@ -1,4 +1,4 @@
-import { CheckCircle, Github, Globe, Linkedin, Sparkles } from 'lucide-react'
+import { CheckCircle, GitBranch, Globe, Link, Sparkles } from 'lucide-react'
 import { Field, PageTitle } from './Upload.jsx'
 
 export default function RequestAccess() {
@@ -21,7 +21,7 @@ export default function RequestAccess() {
           <button className="btn btn-primary full"><Sparkles size={16} /> Submit Application</button>
         </form>
         <aside className="side-stack">
-          <section className="card"><h3>Why Become a Contributor?</h3><ul className="icon-list"><li><CheckCircle /> Build your developer brand</li><li><Github /> Showcase your repos</li><li><Globe /> Help learners worldwide</li><li><Linkedin /> Grow your network</li></ul></section>
+          <section className="card"><h3>Why Become a Contributor?</h3><ul className="icon-list"><li><CheckCircle /> Build your developer brand</li><li><GitBranch /> Showcase your repos</li><li><Globe /> Help learners worldwide</li><li><Link /> Grow your network</li></ul></section>
           <section className="card"><h3>Approval Process</h3><ol className="number-list"><li>Submit application</li><li>Admin reviews within 48 hours</li><li>You receive a decision</li><li>Start publishing</li></ol></section>
         </aside>
       </div>

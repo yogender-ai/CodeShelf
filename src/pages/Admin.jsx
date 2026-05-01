@@ -1,4 +1,4 @@
-import { Activity, CheckCircle, Clock, FileText, Github, Globe, Mail, Users, XCircle } from 'lucide-react'
+import { Activity, CheckCircle, Clock, FileText, GitBranch, Globe, Mail, Users, XCircle } from 'lucide-react'
 import { accessRequests } from '../data/mockData.js'
 import { Tabs } from './Explore.jsx'
 import { PageTitle } from './Upload.jsx'
@@ -14,7 +14,7 @@ export default function Admin() {
           <article className="card admin-request" key={request.id}>
             <header><div className="mini-author"><span className="avatar sm">{request.name.charAt(0)}</span><span><strong>{request.name}</strong><small>{request.submittedAt}</small></span></div><div className="row-actions"><button className="btn btn-approve"><CheckCircle size={14} /> Approve</button><button className="btn btn-danger"><XCircle size={14} /> Reject</button></div></header>
             <blockquote>{request.reason}</blockquote>
-            <p className="admin-request-meta"><span><Mail size={12} /> {request.email}</span><span><Github size={12} /> {request.github}</span>{request.portfolio ? <span><Globe size={12} /> {request.portfolio}</span> : null}</p>
+            <p className="admin-request-meta"><span><Mail size={12} /> {request.email}</span><span><GitBranch size={12} /> {request.github}</span>{request.portfolio ? <span><Globe size={12} /> {request.portfolio}</span> : null}</p>
             <div className="tags">{request.topics.map((topic) => <small key={topic}>{topic}</small>)}</div>
           </article>
         ))}
