@@ -35,6 +35,8 @@ export default function App() {
         <Route path="admin" element={<Admin />} />
         <Route path="dsa" element={<TopicPage topic="DSA Notes" color="#8b5cf6" />} />
         <Route path="sql" element={<TopicPage topic="SQL Notes" color="#10b981" />} />
+        <Route path="ml" element={<TopicPage topic="ML Notes" color="#3b82f6" />} />
+        <Route path="nlp" element={<TopicPage topic="NLP Notes" color="#ec4899" />} />
         <Route path="concepts" element={<TopicPage topic="Concepts" color="#f59e0b" />} />
         <Route path="questions" element={<TopicPage topic="Questions" color="#ec4899" />} />
         <Route path="repos" element={<TopicPage topic="Repositories" color="#3b82f6" />} />

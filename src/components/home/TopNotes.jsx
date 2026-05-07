@@ -2,9 +2,11 @@ import { Code, Database, Eye, FileText, GitBranch, Heart, Star } from 'lucide-re
 import { Link } from 'react-router-dom'
 import { topNotes } from '../../data/mockData.js'
 
-const iconMap = { Code, Database, FileText }
+const iconMap = { Code, Database, FileText, Sparkles: Code, GitBranch }
 
-export default function TopNotes() {
+export default function TopNotes({ notes: apiNotes }) {
+  const notes = apiNotes?.length ? apiNotes : topNotes
+  const featured = notes.find((note) => note.repo) || notes[0]
   return (
     <section className="panel-section">
       <div className="section-header">
@@ -17,8 +19,8 @@ export default function TopNotes() {
       </div>
 
       <div className="notes-grid">
-        {topNotes.map((note) => {
-          const Icon = iconMap[note.icon]
+        {notes.slice(0, 3).map((note) => {
+          const Icon = iconMap[note.icon] || FileText
           return (
             <Link to={`/note/${note.id}`} key={note.id} className="note-card">
               <div className="note-cover" style={{ '--note-color': note.color }}>
@@ -45,16 +47,16 @@ export default function TopNotes() {
             <GitBranch size={22} />
             <div>
               <h3>Featured Repository</h3>
-              <p>github.com/adityaverma/dp</p>
+              <p>{featured?.repo || 'Add a repo link while creating a note'}</p>
             </div>
           </div>
           <div className="repo-metrics">
-            <div><strong>89</strong><span>Stars</span></div>
-            <div><strong>21</strong><span>Forks</span></div>
-            <div><strong>4</strong><span>Issues</span></div>
-            <div><strong>7</strong><span>PRs</span></div>
+            <div><strong>{featured?.stars || 0}</strong><span>Stars</span></div>
+            <div><strong>{featured?.forks || 0}</strong><span>Forks</span></div>
+            <div><strong>{featured?.likes || 0}</strong><span>Likes</span></div>
+            <div><strong>{featured?.views || 0}</strong><span>Views</span></div>
           </div>
-          <button className="btn btn-primary"><Star size={16} /> View Repository</button>
+          <Link to={featured ? `/note/${featured.id}` : '/upload'} className="btn btn-primary"><Star size={16} /> View Note</Link>
         </article>
       </div>
     </section>

@@ -485,7 +485,8 @@ textarea {
 }
 
 .section-header button,
-.rail-header button {
+.rail-header button,
+.section-header a {
   background: transparent;
   color: var(--accent);
 }
@@ -1477,6 +1478,12 @@ textarea {
   gap: 16px;
 }
 
+.auth-form,
+.mini-form {
+  display: grid;
+  gap: 12px;
+}
+
 .auth-logo {
   display: flex;
   align-items: center;
@@ -1523,6 +1530,91 @@ textarea {
 .auth-footer a {
   color: var(--accent);
   font-weight: 700;
+}
+
+.form-error {
+  margin: 0;
+  border: 1px solid rgba(239, 68, 68, .32);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, .1);
+  color: #fecaca;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.image-preview {
+  width: 100%;
+  max-height: 170px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.note-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.note-images img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.bullet-line {
+  position: relative;
+  padding-left: 18px;
+}
+
+.bullet-line::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: .78em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.recall-answer {
+  margin: 4px 0 0;
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+  background: rgba(16, 185, 129, .09);
+  color: var(--text-secondary);
+  padding: 10px 12px;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.group-workspace,
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.group-workspace h3,
+.group-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-card {
+  display: grid;
+  gap: 10px;
+}
+
+.group-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 @media (max-width: 1260px) {

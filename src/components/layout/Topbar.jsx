@@ -1,8 +1,11 @@
 import { Bell, ChevronDown, Search, Upload } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { currentUser } from '../../data/mockData.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 export default function Topbar() {
+  const { user } = useAuth()
+  const activeUser = user || currentUser
   return (
     <header className="topbar">
       <div className="topbar-search">
@@ -20,10 +23,10 @@ export default function Topbar() {
           <span />
         </button>
         <Link to="/profile" className="topbar-profile">
-          <div className="avatar sm">{currentUser.name.charAt(0)}</div>
+          <div className="avatar sm">{activeUser.name.charAt(0)}</div>
           <div>
-            <strong>{currentUser.name}</strong>
-            <small>{currentUser.role}</small>
+            <strong>{activeUser.name}</strong>
+            <small>{activeUser.role}</small>
           </div>
           <ChevronDown size={16} />
         </Link>

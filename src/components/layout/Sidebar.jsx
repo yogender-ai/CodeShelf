@@ -19,12 +19,15 @@ import {
   User,
   Users,
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const mainLinks = [
   { name: 'Home', icon: Home, path: '/' },
   { name: 'Explore', icon: Compass, path: '/explore' },
   { name: 'DSA Notes', icon: BookOpen, path: '/dsa' },
   { name: 'SQL Notes', icon: Database, path: '/sql' },
+  { name: 'ML Notes', icon: Sparkles, path: '/ml' },
+  { name: 'NLP Notes', icon: FileText, path: '/nlp' },
   { name: 'Concepts', icon: Lightbulb, path: '/concepts' },
   { name: 'Questions', icon: HelpCircle, path: '/questions' },
   { name: 'Repositories', icon: GitBranch, path: '/repos' },
@@ -48,6 +51,7 @@ const accountLinks = [
 ]
 
 export default function Sidebar() {
+  const { logout } = useAuth()
   return (
     <aside className="sidebar">
       <NavLink to="/" className="sidebar-logo">
@@ -69,7 +73,7 @@ export default function Sidebar() {
 
         <div className="sidebar-section">
           <p className="sidebar-section-title">Account</p>
-          {accountLinks.map((link) => <NavItem key={link.name} {...link} />)}
+          {accountLinks.map((link) => <NavItem key={link.name} {...link} onClick={link.name === 'Sign Out' ? logout : undefined} />)}
         </div>
       </nav>
 
@@ -84,9 +88,9 @@ export default function Sidebar() {
   )
 }
 
-function NavItem({ name, icon: Icon, path, badge }) {
+function NavItem({ name, icon: Icon, path, badge, onClick }) {
   return (
-    <NavLink to={path} end={path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}>
+    <NavLink to={path} onClick={onClick} end={path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}>
       <Icon size={16} />
       <span>{name}</span>
       {badge ? <span className="nav-badge" /> : null}
