@@ -2,11 +2,13 @@ import { createHmac, pbkdf2Sync, randomBytes, randomUUID, timingSafeEqual } from
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { spawnSync } from 'node:child_process'
 import http from 'node:http'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, 'data')
 const DB_FILE = join(DATA_DIR, 'codeshelf.json')
+const LEETCODE_EXPORT_DIR = join(DATA_DIR, 'leetcode')
 const PORT = Number(process.env.PORT || 4200)
 const TOKEN_SECRET = process.env.CODESHELF_SECRET || 'codeshelf-local-dev-secret'
 
@@ -212,6 +214,7 @@ Important UX: search should answer concept recall immediately, not only return d
       },
     ],
     shares: [],
+    leetcodeSyncs: [],
     activity: [
       { id: randomUUID(), userId: users[0].id, type: 'published', text: 'Dynamic Programming Patterns is live in Core Revision Squad', createdAt: now },
       { id: randomUUID(), userId: users[0].id, type: 'group', text: 'Study Friend joined Core Revision Squad', createdAt: now },
@@ -245,12 +248,15 @@ function makeNote(note) {
 
 function ensureDb() {
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true })
+  if (!existsSync(LEETCODE_EXPORT_DIR)) mkdirSync(LEETCODE_EXPORT_DIR, { recursive: true })
   if (!existsSync(DB_FILE)) writeFileSync(DB_FILE, JSON.stringify(seedDatabase(), null, 2))
 }
 
 function readDb() {
   ensureDb()
-  return JSON.parse(readFileSync(DB_FILE, 'utf8'))
+  const db = JSON.parse(readFileSync(DB_FILE, 'utf8'))
+  if (!Array.isArray(db.leetcodeSyncs)) db.leetcodeSyncs = []
+  return db
 }
 
 function writeDb(db) {
@@ -387,6 +393,359 @@ function conceptRecall(query, notes) {
   }
 }
 
+function slugify(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 90) || 'leetcode-solution'
+}
+
+function sameLocalDate(timestampSeconds, date = new Date()) {
+  const solved = new Date(Number(timestampSeconds) * 1000)
+  return solved.getFullYear() === date.getFullYear()
+    && solved.getMonth() === date.getMonth()
+    && solved.getDate() === date.getDate()
+}
+
+function statCount(stats = [], difficulty = 'All') {
+  return stats.find((item) => item.difficulty === difficulty)?.count || 0
+}
+
+async function fetchLeetCodeProfile(username) {
+  const cleanUsername = String(username || '').trim()
+  if (!cleanUsername) throw new Error('LeetCode username is required.')
+
+  if (cleanUsername.toLowerCase() === 'demo') return demoLeetCodeProfile()
+
+  const query = `
+    query CodeShelfLeetCodeProfile($username: String!, $limit: Int!) {
+      allQuestionsCount {
+        difficulty
+        count
+      }
+      matchedUser(username: $username) {
+        username
+        profile {
+          realName
+          userAvatar
+          ranking
+          reputation
+          aboutMe
+          countryName
+        }
+        submitStatsGlobal {
+          acSubmissionNum {
+            difficulty
+            count
+            submissions
+          }
+          totalSubmissionNum {
+            difficulty
+            count
+            submissions
+          }
+        }
+        userCalendar {
+          streak
+          totalActiveDays
+          submissionCalendar
+        }
+      }
+      recentAcSubmissionList(username: $username, limit: $limit) {
+        id
+        title
+        titleSlug
+        timestamp
+      }
+    }
+  `
+
+  const response = await fetch('https://leetcode.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Referer: 'https://leetcode.com',
+      'User-Agent': 'CodeShelf LeetCode Sync',
+    },
+    body: JSON.stringify({ query, variables: { username: cleanUsername, limit: 20 } }),
+  })
+
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || payload.errors?.length) {
+    throw new Error(payload.errors?.[0]?.message || 'Could not reach LeetCode right now.')
+  }
+  if (!payload.data?.matchedUser) throw new Error('No LeetCode profile found for that username.')
+  return normalizeLeetCodeProfile(payload.data)
+}
+
+function normalizeLeetCodeProfile(data) {
+  const user = data.matchedUser
+  const profile = user.profile || {}
+  const accepted = user.submitStatsGlobal?.acSubmissionNum || []
+  const submitted = user.submitStatsGlobal?.totalSubmissionNum || []
+  const totals = data.allQuestionsCount || []
+  const totalSolved = statCount(accepted, 'All')
+  const totalQuestions = statCount(totals, 'All')
+  const recentAccepted = uniqueRecentSubmissions(data.recentAcSubmissionList || [])
+  const todaySolved = recentAccepted.filter((item) => sameLocalDate(item.timestamp)).length
+  const submissionCalendar = safeJson(user.userCalendar?.submissionCalendar, {})
+  const activeDays = Object.keys(submissionCalendar)
+    .map((stamp) => ({ date: new Date(Number(stamp) * 1000).toISOString(), count: submissionCalendar[stamp] }))
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+
+  return {
+    username: user.username,
+    realName: profile.realName || user.username,
+    avatar: profile.userAvatar || '',
+    ranking: profile.ranking || null,
+    reputation: profile.reputation || 0,
+    country: profile.countryName || '',
+    about: stripHtml(profile.aboutMe || ''),
+    totalSolved,
+    totalQuestions,
+    unsolved: Math.max(0, totalQuestions - totalSolved),
+    attempted: statCount(submitted, 'All'),
+    acceptanceRate: statCount(submitted, 'All') ? Math.round((totalSolved / statCount(submitted, 'All')) * 100) : 0,
+    todaySolved,
+    streak: user.userCalendar?.streak || 0,
+    activeDays: user.userCalendar?.totalActiveDays || 0,
+    lastActive: activeDays[0]?.date || null,
+    difficulty: ['Easy', 'Medium', 'Hard'].map((difficulty) => ({
+      difficulty,
+      solved: statCount(accepted, difficulty),
+      total: statCount(totals, difficulty),
+      submissions: submitted.find((item) => item.difficulty === difficulty)?.submissions || 0,
+    })),
+    recentAccepted: recentAccepted.map((item) => ({
+      id: item.id,
+      title: item.title,
+      titleSlug: item.titleSlug,
+      solvedAt: new Date(Number(item.timestamp) * 1000).toISOString(),
+    })),
+  }
+}
+
+function uniqueRecentSubmissions(submissions) {
+  const seen = new Set()
+  return submissions.filter((item) => {
+    if (seen.has(item.titleSlug)) return false
+    seen.add(item.titleSlug)
+    return true
+  })
+}
+
+function safeJson(value, fallback) {
+  try {
+    return value ? JSON.parse(value) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function stripHtml(value) {
+  return String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function demoLeetCodeProfile() {
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  return {
+    username: 'demo',
+    realName: 'Demo LeetCoder',
+    avatar: '',
+    ranking: 12488,
+    reputation: 42,
+    country: 'India',
+    about: 'Demo profile for offline CodeShelf development.',
+    totalSolved: 312,
+    totalQuestions: 3480,
+    unsolved: 3168,
+    attempted: 421,
+    acceptanceRate: 74,
+    todaySolved: 2,
+    streak: 9,
+    activeDays: 146,
+    lastActive: new Date().toISOString(),
+    difficulty: [
+      { difficulty: 'Easy', solved: 142, total: 850, submissions: 164 },
+      { difficulty: 'Medium', solved: 139, total: 1800, submissions: 212 },
+      { difficulty: 'Hard', solved: 31, total: 830, submissions: 45 },
+    ],
+    recentAccepted: [
+      { id: 'demo-two-sum', title: 'Two Sum', titleSlug: 'two-sum', solvedAt: new Date(nowSeconds * 1000).toISOString() },
+      { id: 'demo-valid-parentheses', title: 'Valid Parentheses', titleSlug: 'valid-parentheses', solvedAt: new Date((nowSeconds - 3600) * 1000).toISOString() },
+      { id: 'demo-product-array', title: 'Product of Array Except Self', titleSlug: 'product-of-array-except-self', solvedAt: new Date((nowSeconds - 86400) * 1000).toISOString() },
+    ],
+  }
+}
+
+async function buildSolutionMarkdown(payload, user) {
+  const fallback = deterministicSolutionMarkdown(payload, user)
+  const prompt = `Create a polished Markdown LeetCode solution note for CodeShelf.
+Question: ${payload.title}
+Difficulty: ${payload.difficulty || 'Unknown'}
+Language: ${payload.language || 'Code'}
+Approach notes: ${payload.approach || 'Explain the approach clearly.'}
+Complexity: ${payload.complexity || 'Infer from the code if possible.'}
+Code:
+\`\`\`${payload.language || ''}
+${payload.code || ''}
+\`\`\`
+
+Return only Markdown. Use sections: Problem, Intuition, Approach, Complexity, Code, Edge Cases, Revision Trigger.`
+
+  const aiMarkdown = await askAiForMarkdown(prompt).catch(() => '')
+  return cleanMarkdownResponse(aiMarkdown) || fallback
+}
+
+async function askAiForMarkdown(prompt) {
+  if (process.env.OPENROUTER_API_KEY) {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': process.env.CODE_SHELF_URL || 'http://localhost:5173',
+        'X-Title': 'CodeShelf',
+      },
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_MODEL || 'openrouter/auto',
+        messages: [
+          { role: 'system', content: 'You write concise, correct Markdown programming notes for interview revision.' },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(data.error?.message || 'OpenRouter request failed.')
+    return data.choices?.[0]?.message?.content || ''
+  }
+
+  if (process.env.GEMINI_API_KEY) {
+    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(data.error?.message || 'Gemini request failed.')
+    return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || ''
+  }
+
+  return ''
+}
+
+function deterministicSolutionMarkdown(payload, user) {
+  const title = payload.title || titleFromSlug(payload.titleSlug)
+  const language = payload.language || 'text'
+  return `# ${title}
+
+## Problem
+- Platform: LeetCode
+- Difficulty: ${payload.difficulty || 'Unknown'}
+- Author: ${user?.name || 'CodeShelf User'}
+- URL: ${payload.titleSlug ? `https://leetcode.com/problems/${payload.titleSlug}/` : 'Add the LeetCode problem URL'}
+
+## Intuition
+${payload.approach || 'Write the key observation that makes the solution work.'}
+
+## Approach
+- Identify the required state or invariant.
+- Process the input while preserving that invariant.
+- Return the final answer after all updates are complete.
+
+## Complexity
+${payload.complexity || '- Time: O(n)\n- Space: O(1) or O(n), depending on the data structure used.'}
+
+## Code
+\`\`\`${language.toLowerCase()}
+${payload.code || '// Paste your accepted solution here.'}
+\`\`\`
+
+## Edge Cases
+- Empty or minimum-size input.
+- Duplicate values or repeated states.
+- Large inputs near constraint limits.
+
+## Revision Trigger
+Explain the invariant first, then the update rule, then the reason it cannot miss a valid answer.
+`
+}
+
+function cleanMarkdownResponse(value = '') {
+  const trimmed = String(value || '').trim()
+  if (!trimmed.startsWith('```')) return trimmed
+  return trimmed.replace(/^```(?:markdown|md)?\s*/i, '').replace(/```$/, '').trim()
+}
+
+function titleFromSlug(slug = '') {
+  return String(slug || 'LeetCode Solution')
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function exportLeetCodeMarkdown({ markdown, title, titleSlug, user, source = 'manual' }) {
+  const fileSlug = slugify(titleSlug || title)
+  const fileName = `${fileSlug}.md`
+  if (!existsSync(LEETCODE_EXPORT_DIR)) mkdirSync(LEETCODE_EXPORT_DIR, { recursive: true })
+  const localPath = join(LEETCODE_EXPORT_DIR, fileName)
+  writeFileSync(localPath, markdown)
+
+  const exportResult = {
+    localPath,
+    repoPath: '',
+    pushed: false,
+    commit: '',
+    message: 'Saved to CodeShelf data folder.',
+  }
+
+  const repoRoot = process.env.LEETCODE_REPO_PATH
+  if (!repoRoot) return exportResult
+
+  const repoDir = join(repoRoot, 'data', 'leetcode')
+  if (!existsSync(repoDir)) mkdirSync(repoDir, { recursive: true })
+  const repoPath = join(repoDir, fileName)
+  writeFileSync(repoPath, markdown)
+  exportResult.repoPath = repoPath
+  exportResult.message = 'Saved to the configured repository data folder.'
+
+  if (process.env.LEETCODE_AUTO_PUSH === 'true') {
+    const relativePath = `data/leetcode/${fileName}`
+    spawnSync('git', ['add', relativePath], { cwd: repoRoot })
+    const commit = spawnSync('git', ['commit', '-m', `Add LeetCode solution: ${title}`], { cwd: repoRoot, encoding: 'utf8' })
+    if (commit.status === 0) {
+      const push = spawnSync('git', ['push'], { cwd: repoRoot, encoding: 'utf8' })
+      exportResult.pushed = push.status === 0
+      exportResult.commit = commit.stdout || commit.stderr || ''
+      exportResult.message = exportResult.pushed ? 'Saved, committed, and pushed to the configured repository.' : 'Saved and committed. Git push needs attention.'
+    } else if ((commit.stdout || commit.stderr || '').includes('nothing to commit')) {
+      exportResult.message = 'Repository already had the latest Markdown file.'
+    }
+  }
+
+  return exportResult
+}
+
+function makeLeetCodeNote({ payload, markdown, user, exportResult }) {
+  const title = payload.title || titleFromSlug(payload.titleSlug)
+  return makeNote({
+    id: randomUUID(),
+    authorId: user.id,
+    title,
+    description: payload.description || `${payload.difficulty || 'LeetCode'} solution with approach, complexity, code, and revision notes.`,
+    content: markdown,
+    topic: 'DSA',
+    type: 'Code Explanation',
+    tags: ['LeetCode', payload.difficulty || 'DSA', payload.language || 'Code'].filter(Boolean),
+    repo: payload.repo || exportResult.repoPath || exportResult.localPath,
+    visibility: payload.visibility || 'public',
+    stats: { views: 0, likes: 0 },
+  })
+}
+
 function topicStats(notes) {
   return Object.entries(topicPalette).map(([name, meta], index) => ({
     id: index + 1,
@@ -439,6 +798,94 @@ async function route(req, res) {
 
     if (path === '/api/auth/me' && req.method === 'GET') {
       return user ? send(res, 200, { user: publicUser(user) }) : send(res, 401, { error: 'Not authenticated.' })
+    }
+
+    if (path === '/api/leetcode/profile' && req.method === 'GET') {
+      const username = url.searchParams.get('username') || user?.leetcodeUsername || ''
+      const profile = await fetchLeetCodeProfile(username)
+      return send(res, 200, { profile })
+    }
+
+    if (path === '/api/leetcode/connect' && req.method === 'POST') {
+      if (!user) return send(res, 401, { error: 'Login required.' })
+      const body = await parseBody(req)
+      const profile = await fetchLeetCodeProfile(body.username)
+      user.leetcodeUsername = profile.username
+      user.leetcodeProfile = {
+        totalSolved: profile.totalSolved,
+        ranking: profile.ranking,
+        connectedAt: new Date().toISOString(),
+      }
+      db.activity.push({ id: randomUUID(), userId: user.id, type: 'leetcode', text: `Connected LeetCode profile @${profile.username}`, createdAt: new Date().toISOString() })
+      writeDb(db)
+      return send(res, 200, { user: publicUser(user), profile })
+    }
+
+    if (path === '/api/leetcode/sync' && req.method === 'POST') {
+      if (!user) return send(res, 401, { error: 'Login required.' })
+      const body = await parseBody(req)
+      const profile = await fetchLeetCodeProfile(body.username || user.leetcodeUsername)
+      const limit = Math.max(1, Math.min(Number(body.limit || 5), 20))
+      const recent = profile.recentAccepted
+        .filter((item) => !body.todayOnly || sameLocalDate(new Date(item.solvedAt).getTime() / 1000))
+        .slice(0, limit)
+      const synced = []
+      const skipped = []
+
+      for (const problem of recent) {
+        const alreadySynced = db.leetcodeSyncs.some((item) => item.userId === user.id && item.titleSlug === problem.titleSlug)
+        if (alreadySynced) {
+          skipped.push(problem)
+          continue
+        }
+
+        const payload = {
+          title: problem.title,
+          titleSlug: problem.titleSlug,
+          difficulty: 'LeetCode',
+          language: 'Markdown',
+          approach: `Accepted on LeetCode by @${profile.username} on ${new Date(problem.solvedAt).toLocaleString()}. Add your final code with the solution publisher when you want a complete community post.`,
+          code: '',
+          visibility: body.visibility || 'private',
+          repo: body.repo || '',
+        }
+        const markdown = deterministicSolutionMarkdown(payload, user)
+        const exportResult = exportLeetCodeMarkdown({ markdown, title: problem.title, titleSlug: problem.titleSlug, user, source: 'sync' })
+        const note = makeLeetCodeNote({ payload, markdown, user, exportResult })
+        db.notes.push(note)
+        db.leetcodeSyncs.push({
+          id: randomUUID(),
+          userId: user.id,
+          username: profile.username,
+          title: problem.title,
+          titleSlug: problem.titleSlug,
+          noteId: note.id,
+          solvedAt: problem.solvedAt,
+          exportResult,
+          createdAt: new Date().toISOString(),
+        })
+        synced.push({ problem, note: displayNote(note, db), exportResult })
+      }
+
+      if (synced.length) {
+        db.activity.push({ id: randomUUID(), userId: user.id, type: 'leetcode', text: `Synced ${synced.length} LeetCode solution${synced.length === 1 ? '' : 's'} into CodeShelf`, createdAt: new Date().toISOString() })
+      }
+      writeDb(db)
+      return send(res, 200, { profile, synced, skipped })
+    }
+
+    if (path === '/api/leetcode/solution' && req.method === 'POST') {
+      if (!user) return send(res, 401, { error: 'Login required.' })
+      const body = await parseBody(req)
+      if (!body.title && !body.titleSlug) return send(res, 400, { error: 'Question title or slug is required.' })
+      if (!body.code) return send(res, 400, { error: 'Paste your accepted solution code first.' })
+      const markdown = await buildSolutionMarkdown(body, user)
+      const exportResult = exportLeetCodeMarkdown({ markdown, title: body.title || titleFromSlug(body.titleSlug), titleSlug: body.titleSlug, user, source: 'manual' })
+      const note = makeLeetCodeNote({ payload: body, markdown, user, exportResult })
+      db.notes.push(note)
+      db.activity.push({ id: randomUUID(), userId: user.id, type: 'leetcode', text: `Published LeetCode solution: ${note.title}`, createdAt: new Date().toISOString() })
+      writeDb(db)
+      return send(res, 201, { note: displayNote(note, db), markdown, exportResult })
     }
 
     if (path === '/api/dashboard' && req.method === 'GET') {

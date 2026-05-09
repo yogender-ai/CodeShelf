@@ -15,6 +15,7 @@ import {
   Settings,
   Sparkles,
   Star,
+  Trophy,
   Upload,
   User,
   Users,
@@ -32,6 +33,7 @@ const mainLinks = [
   { name: 'Questions', icon: HelpCircle, path: '/questions' },
   { name: 'Repositories', icon: GitBranch, path: '/repos' },
   { name: 'Community', icon: Users, path: '/community' },
+  { name: 'LeetCode Sync', icon: Trophy, path: '/leetcode' },
 ]
 
 const contributorLinks = [

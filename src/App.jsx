@@ -14,6 +14,7 @@ import Community from './pages/Community.jsx'
 import Admin from './pages/Admin.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
+import LeetCode from './pages/LeetCode.jsx'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
         <Route path="community" element={<Community />} />
+        <Route path="leetcode" element={<LeetCode />} />
         <Route path="admin" element={<Admin />} />
         <Route path="dsa" element={<TopicPage topic="DSA Notes" color="#8b5cf6" />} />
         <Route path="sql" element={<TopicPage topic="SQL Notes" color="#10b981" />} />

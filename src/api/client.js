@@ -57,6 +57,13 @@ export const dashboardApi = {
   get: () => api('/dashboard'),
 }
 
+export const leetcodeApi = {
+  profile: (username) => api(`/leetcode/profile?username=${encodeURIComponent(username)}`),
+  connect: (payload) => api('/leetcode/connect', { method: 'POST', body: payload }),
+  sync: (payload) => api('/leetcode/sync', { method: 'POST', body: payload }),
+  publishSolution: (payload) => api('/leetcode/solution', { method: 'POST', body: payload }),
+}
+
 function toQuery(params) {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
