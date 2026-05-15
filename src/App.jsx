@@ -15,6 +15,8 @@ import Admin from './pages/Admin.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import LeetCode from './pages/LeetCode.jsx'
+import Revision from './pages/Revision.jsx'
+import EditNote from './pages/EditNote.jsx'
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
         <Route path="explore" element={<Explore />} />
         <Route path="note/:id" element={<NoteDetail />} />
         <Route path="upload" element={<Upload />} />
+        <Route path="edit/:id" element={<EditNote />} />
         <Route path="request-access" element={<RequestAccess />} />
         <Route path="my-contributions" element={<MyContributions />} />
         <Route path="my-repos" element={<MyRepositories />} />
@@ -42,6 +45,7 @@ export default function App() {
         <Route path="concepts" element={<TopicPage topic="Concepts" color="#f59e0b" />} />
         <Route path="questions" element={<TopicPage topic="Questions" color="#ec4899" />} />
         <Route path="repos" element={<TopicPage topic="Repositories" color="#3b82f6" />} />
+        <Route path="revise/:topic" element={<Revision />} />
       </Route>
     </Routes>
   )

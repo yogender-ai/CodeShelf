@@ -1,6 +1,6 @@
 import { Plus, Upload as UploadIcon, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import CodeMirror from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
@@ -9,9 +9,10 @@ import { cpp } from '@codemirror/lang-cpp'
 import { vscodeDark } from '@uiw/codemirror-theme-vscode'
 import { groupsApi, notesApi } from '../api/client.js'
 
-export default function Upload() {
+export default function EditNote() {
   const navigate = useNavigate()
-  const [tags, setTags] = useState(['DSA', 'Revision'])
+  const { id } = useParams()
+  const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState('')
   const [groups, setGroups] = useState([])
   const [error, setError] = useState('')
@@ -30,7 +31,25 @@ export default function Upload() {
 
   useEffect(() => {
     groupsApi.list().then((data) => setGroups(data.groups)).catch(() => setGroups([]))
-  }, [])
+    if (id) {
+      notesApi.get(id).then((data) => {
+        const { note } = data;
+        setForm({
+          title: note.title || '',
+          description: note.description || '',
+          topic: note.topic || 'DSA',
+          type: note.type || 'Note',
+          difficulty: note.difficulty || 'Medium',
+          content: note.content || '',
+          repo: note.repo || '',
+          visibility: note.visibility || 'private',
+          groupIds: note.groupIds || [],
+        })
+        setTags(note.tags || [])
+        setImages(note.images || [])
+      }).catch((err) => setError('Failed to load note: ' + err.message))
+    }
+  }, [id])
 
   const addTag = () => {
     const clean = tagInput.trim()
@@ -42,8 +61,8 @@ export default function Upload() {
     event.preventDefault()
     setError('')
     try {
-      const data = await notesApi.create({ ...form, tags, images })
-      navigate(`/note/${data.note.id}`)
+      await notesApi.update(id, { ...form, tags, images })
+      navigate(`/note/${id}`)
     } catch (err) {
       setError(err.message)
     }
@@ -63,7 +82,7 @@ export default function Upload() {
 
   return (
     <div className="page">
-      <PageTitle title="Upload Content" subtitle="Store notes with text, images, code, explanations, and group visibility" />
+      <PageTitle title="Edit Note" subtitle="Update your note details and content" />
       <div className="form-grid">
         <form className="card form-card" onSubmit={handleSubmit}>
           <Field label="Title *"><input className="input" value={form.title} onChange={(event) => updateField('title', event.target.value)} placeholder="Dynamic Programming - Complete Guide" /></Field>
@@ -95,7 +114,7 @@ export default function Upload() {
           </Field>
           <Field label="GitHub Repository (optional)"><input className="input" value={form.repo} onChange={(event) => updateField('repo', event.target.value)} placeholder="https://github.com/username/repo" /></Field>
           {error ? <p className="form-error">{error}</p> : null}
-          <div className="form-actions"><button type="button" className="btn btn-secondary">Save as Draft</button><button className="btn btn-primary"><UploadIcon size={16} /> Publish Note</button></div>
+          <div className="form-actions"><button type="button" className="btn btn-secondary" onClick={() => navigate(`/note/${id}`)}>Cancel</button><button className="btn btn-primary"><UploadIcon size={16} /> Save Changes</button></div>
         </form>
         <aside className="side-stack">
           <section className="card"><h3>Guidelines</h3><ul className="check-list"><li>Use clear titles</li><li>Add relevant tags</li><li>Include code examples</li><li>Link your GitHub repo</li></ul></section>

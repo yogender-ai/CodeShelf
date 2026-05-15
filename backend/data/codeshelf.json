@@ -4,23 +4,29 @@
       "id": "user_yogender",
       "name": "Yogender",
       "email": "yogender@example.com",
-      "password": "978e46f24e726fd9592dee0d69b197e4:0d3ced3ddedf1ded8487db02da7166d34abcf55e8a2677a5a16364c13994c1ab",
+      "password": "e4d5fa9a8b3c3e0b56fc6c17bab8a125:9c46dc97c400bea0f13c3e5ac4bb5eac9f52a3dd30e5027994cb9673b5536a70",
       "role": "Owner",
       "bio": "Building a personal revision library for DSA, SQL, ML, NLP, projects, and code explanations.",
       "location": "India",
       "github": "github.com/yogender-ai",
-      "createdAt": "2026-05-07T07:54:57.962Z"
+      "streakCount": 5,
+      "maxStreak": 12,
+      "lastActiveDate": "2026-05-15",
+      "createdAt": "2026-05-15T04:39:06.691Z"
     },
     {
       "id": "user_friend",
       "name": "Study Friend",
       "email": "friend@example.com",
-      "password": "978e46f24e726fd9592dee0d69b197e4:0d3ced3ddedf1ded8487db02da7166d34abcf55e8a2677a5a16364c13994c1ab",
+      "password": "e4d5fa9a8b3c3e0b56fc6c17bab8a125:9c46dc97c400bea0f13c3e5ac4bb5eac9f52a3dd30e5027994cb9673b5536a70",
       "role": "Collaborator",
       "bio": "Adds quick explanations and interview questions.",
       "location": "Remote",
       "github": "github.com/studyfriend",
-      "createdAt": "2026-05-07T07:54:57.962Z"
+      "streakCount": 1,
+      "maxStreak": 3,
+      "lastActiveDate": "2026-05-15",
+      "createdAt": "2026-05-15T04:39:06.691Z"
     }
   ],
   "notes": [
@@ -31,6 +37,7 @@
       "content": "# Dynamic Programming Patterns\n\nDynamic programming helps when a problem has overlapping subproblems and optimal substructure.\n\n## How to recognize\n- Choices repeat across indexes, capacities, masks, or strings.\n- Brute force recursion recomputes the same state.\n- The answer can be expressed from smaller answers.\n\n## State design\n`dp[i]` means the best answer using prefix `0..i`.\n`dp[i][j]` often compares two sequences or tracks capacity.\n\n```cpp\nint climbStairs(int n) {\n  vector<int> dp(n + 1);\n  dp[0] = 1;\n  dp[1] = 1;\n  for (int i = 2; i <= n; i++) {\n    dp[i] = dp[i - 1] + dp[i - 2];\n  }\n  return dp[n];\n}\n```\n\nRevision trigger: define state first, then transition, then base cases.",
       "topic": "DSA",
       "type": "Concept",
+      "difficulty": "Medium",
       "tags": [
         "DP",
         "Memoization",
@@ -60,6 +67,7 @@
       "content": "# SQL Joins\n\nJoins combine rows from multiple tables using related columns.\n\n## Inner Join\nReturns only matching rows from both tables.\n\n```sql\nSELECT e.name, d.name AS department\nFROM employees e\nINNER JOIN departments d ON d.id = e.department_id;\n```\n\n## Left Join\nKeeps every row from the left table and fills missing right side columns with NULL.\n\nCommon interview point: use LEFT JOIN with `WHERE right_table.id IS NULL` to find missing relationships.",
       "topic": "SQL",
       "type": "Note",
+      "difficulty": "Medium",
       "tags": [
         "SQL",
         "Joins",
@@ -87,6 +95,7 @@
       "content": "# Bias Variance Tradeoff\n\nHigh bias means the model is too simple and underfits. High variance means the model follows noise and overfits.\n\nReduce bias with richer features, stronger models, or lower regularization. Reduce variance with more data, cross validation, regularization, pruning, or ensembling.\n\nWalking revision: underfit misses train and test; overfit wins train but loses test.",
       "topic": "ML",
       "type": "Concept",
+      "difficulty": "Medium",
       "tags": [
         "ML",
         "Generalization",
@@ -116,6 +125,7 @@
       "content": "# Attention\n\nAttention lets each token decide which other tokens matter for its representation.\n\nQueries ask what a token is looking for. Keys describe what each token offers. Values contain the information to mix after relevance is calculated.\n\n```text\nAttention(Q, K, V) = softmax(QK^T / sqrt(d_k))V\n```\n\nUse this sentence while revising: query asks, key matches, value answers.",
       "topic": "NLP",
       "type": "Note",
+      "difficulty": "Medium",
       "tags": [
         "NLP",
         "Transformers",
@@ -143,6 +153,7 @@
       "content": "# CodeShelf Architecture\n\nFrontend handles fast note capture and revision views. Backend owns users, notes, groups, sharing, and summary/search helpers.\n\nCore entities:\n- User\n- Note\n- Group\n- GroupMessage\n- SharedNote\n\nImportant UX: search should answer concept recall immediately, not only return document links.",
       "topic": "Projects",
       "type": "Project",
+      "difficulty": "Medium",
       "tags": [
         "React",
         "Backend",
@@ -183,31 +194,31 @@
       ],
       "messages": [
         {
-          "id": "6462a0d4-c290-46c9-b7b5-e4a39025c4b6",
+          "id": "434b3c4c-1e2f-4b36-8355-133b870e7fe5",
           "fromUserId": "user_friend",
           "noteId": "note_ml_bias_variance",
           "text": "Added a short walking-revision version for bias variance.",
-          "createdAt": "2026-05-07T07:54:57.962Z"
+          "createdAt": "2026-05-15T04:39:06.691Z"
         }
       ],
-      "createdAt": "2026-05-07T07:54:57.962Z"
+      "createdAt": "2026-05-15T04:39:06.691Z"
     }
   ],
   "shares": [],
   "activity": [
     {
-      "id": "65c785a8-f004-464d-86e4-dbd5e9ac6ac0",
+      "id": "2a771c21-b8f9-4e24-a409-7f304510ce9b",
       "userId": "user_yogender",
       "type": "published",
       "text": "Dynamic Programming Patterns is live in Core Revision Squad",
-      "createdAt": "2026-05-07T07:54:57.962Z"
+      "createdAt": "2026-05-15T04:39:06.691Z"
     },
     {
-      "id": "08aeef77-363a-420f-b3bd-66e64c40515f",
+      "id": "9e2ac466-5b8f-479a-bba3-1eb9ef0d482d",
       "userId": "user_yogender",
       "type": "group",
       "text": "Study Friend joined Core Revision Squad",
-      "createdAt": "2026-05-07T07:54:57.962Z"
+      "createdAt": "2026-05-15T04:39:06.691Z"
     }
   ]
 }

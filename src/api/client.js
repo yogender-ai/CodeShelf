@@ -37,6 +37,8 @@ export const notesApi = {
   list: (params = {}) => api(`/notes${toQuery(params)}`),
   get: (id) => api(`/notes/${id}`),
   create: (payload) => api('/notes', { method: 'POST', body: payload }),
+  update: (id, payload) => api(`/notes/${id}`, { method: 'PUT', body: payload }),
+  remove: (id) => api(`/notes/${id}`, { method: 'DELETE' }),
   like: (id) => api(`/notes/${id}/like`, { method: 'POST' }),
   share: (id, payload) => api(`/notes/${id}/share`, { method: 'POST', body: payload }),
 }
