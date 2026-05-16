@@ -34,11 +34,18 @@ if config.config_file_name is not None:
 # Target metadata for autogenerate
 target_metadata = Base.metadata
 
-# Override the sqlalchemy.url with the sync URL from .env
+# Load settings from .env
 settings = get_settings()
+
+# Sync URL for offline mode
 sync_url = settings.database_url_sync or settings.database_url.replace(
     "+asyncpg", ""
 )
+
+# Async URL for online mode (uses asyncpg — no psycopg2 needed)
+async_url = settings.database_url  # postgresql+asyncpg://...
+
+# Default the config to the sync URL (used by offline mode)
 config.set_main_option("sqlalchemy.url", sync_url)
 
 
@@ -69,10 +76,17 @@ async def run_async_migrations() -> None:
     """
     Run migrations in 'online' mode using an async engine.
     """
+    # Override the config with the async URL so async_engine_from_config
+    # uses asyncpg instead of psycopg2.
+    # Strip sslmode from the query string — asyncpg doesn't accept it;
+    # SSL is enabled via connect_args instead.
+    clean_url = async_url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+    config.set_main_option("sqlalchemy.url", clean_url)
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={"ssl": "require"},
     )
 
     async with connectable.connect() as connection:

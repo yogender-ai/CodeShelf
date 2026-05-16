@@ -22,8 +22,11 @@ settings = get_settings()
 # ── Async Engine ──────────────────────────────────────────────────────
 # Neon DB is serverless, so we keep the pool small and enable pre-ping
 # to gracefully handle connections that were closed while idle.
+# asyncpg doesn't accept 'sslmode' as a URL query param — strip it and
+# pass SSL via connect_args instead.
+_db_url = settings.database_url.replace("?sslmode=require", "").replace("&sslmode=require", "")
 engine = create_async_engine(
-    settings.database_url,
+    _db_url,
     echo=False,
     pool_size=5,
     max_overflow=10,
