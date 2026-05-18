@@ -18,6 +18,7 @@ from sqlalchemy import text
 from app.config import get_settings
 from app.database import engine
 from app.routes.auth import router as auth_router
+from app.routes.notes import router as notes_router
 
 
 settings = get_settings()
@@ -68,6 +69,7 @@ app.add_middleware(
 
 # ── Routers ───────────────────────────────────────────────────────────
 app.include_router(auth_router)
+app.include_router(notes_router)
 
 
 # ── Routes ────────────────────────────────────────────────────────────
