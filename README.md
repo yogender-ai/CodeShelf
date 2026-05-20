@@ -11,7 +11,7 @@ npm run dev
 
 Frontend: `http://127.0.0.1:5173`
 
-API: `http://localhost:4200/api`
+API: `http://127.0.0.1:8000/api`
 
 Demo login:
 
@@ -47,4 +47,4 @@ $env:LEETCODE_REPO_PATH="A:\path\to\your\repo"; $env:LEETCODE_AUTO_PUSH="true"; 
 
 When `OPENROUTER_API_KEY` or `GEMINI_API_KEY` is set, CodeShelf asks the model to format solution posts into a cleaner `.md` structure. Without keys, it uses the built-in Markdown template.
 
-The local database is stored at `backend/data/codeshelf.json`.
+The local FastAPI backend is in `backend-py/app/main.py`, and the local database is stored at `backend/data/codeshelf.json`.

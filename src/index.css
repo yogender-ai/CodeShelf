@@ -153,13 +153,6 @@ textarea {
   color: var(--accent);
 }
 
-.nav-badge {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
-}
-
 .sidebar-cta {
   margin: 16px;
   padding: 16px;
@@ -508,7 +501,6 @@ textarea {
 
 .topic-card:hover,
 .explore-card:hover,
-.repo-card:hover,
 .community-card:hover,
 .note-card:hover {
   border-color: var(--primary);
@@ -630,7 +622,6 @@ textarea {
 
 .note-body p,
 .explore-card p,
-.repo-card p,
 .profile-copy p {
   color: var(--text-secondary);
   line-height: 1.5;
@@ -660,9 +651,7 @@ textarea {
 
 .note-footer,
 .explore-card footer,
-.repo-card footer,
-.detail-meta > div,
-.admin-request-meta {
+.detail-meta > div {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -679,10 +668,7 @@ textarea {
 
 .note-footer span,
 .explore-card footer span,
-.detail-meta span,
-.repo-card footer span,
-.repo-card footer small,
-.admin-request-meta span {
+.detail-meta span {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -696,8 +682,7 @@ textarea {
 }
 
 .mini-author small,
-.contributor-row small,
-.integration-row small {
+.contributor-row small {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -764,8 +749,6 @@ textarea {
 .contributor-row,
 .stat-row,
 .activity-item,
-.integration-row,
-.admin-metric,
 .contribution-row {
   display: flex;
   align-items: center;
@@ -916,7 +899,6 @@ textarea {
 }
 
 .explore-grid,
-.repo-grid,
 .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -924,7 +906,6 @@ textarea {
 }
 
 .explore-card,
-.repo-card,
 .community-card {
   overflow: hidden;
   transition: .18s ease;
@@ -1103,31 +1084,11 @@ textarea {
   color: white;
 }
 
-.check-list,
-.icon-list,
-.number-list {
+.check-list {
   color: var(--text-secondary);
   line-height: 1.8;
   padding-left: 18px;
   margin-bottom: 0;
-}
-
-.icon-list {
-  display: grid;
-  gap: 10px;
-  list-style: none;
-  padding-left: 0;
-}
-
-.icon-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.icon-list svg {
-  width: 15px;
-  color: var(--green);
 }
 
 .dropzone {
@@ -1136,40 +1097,6 @@ textarea {
   padding: 28px 16px;
   text-align: center;
   color: var(--text-muted);
-}
-
-.request-hero {
-  text-align: center;
-  padding: 24px 0 32px;
-}
-
-.request-hero > div:first-child {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 16px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  box-shadow: 0 16px 40px rgba(139, 92, 246, .28);
-}
-
-.request-hero .page-header {
-  margin-bottom: 0;
-}
-
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.checkbox-grid label {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  padding: 9px;
-  color: var(--text-secondary);
 }
 
 .split-header .page-header {
@@ -1231,36 +1158,6 @@ textarea {
   color: var(--red);
 }
 
-.repo-card {
-  display: grid;
-  gap: 12px;
-}
-
-.repo-card header,
-.repo-card footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.repo-card header strong {
-  flex: 1;
-  color: var(--accent);
-}
-
-.repo-card footer {
-  flex-wrap: wrap;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.repo-card i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
 .profile-banner {
   height: 140px;
   border-radius: 12px;
@@ -1301,71 +1198,6 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-}
-
-.settings-grid {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 20px;
-}
-
-.settings-nav {
-  display: grid;
-  align-content: start;
-  gap: 5px;
-}
-
-.settings-nav button {
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-}
-
-.settings-nav button.active,
-.settings-nav button:hover {
-  color: var(--accent);
-  background: rgba(139, 92, 246, .14);
-}
-
-.danger-zone {
-  margin-top: 12px;
-  border-top: 1px solid var(--border);
-  padding-top: 18px;
-}
-
-.danger-zone h3 {
-  color: var(--red);
-}
-
-.toggle-row,
-.integration-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding: 13px 0;
-  color: var(--text-secondary);
-}
-
-.toggle-row input {
-  width: 38px;
-  height: 20px;
-  accent-color: var(--primary);
-}
-
-.integration-row > span {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.integration-row strong,
-.integration-row small {
-  display: block;
 }
 
 .topic-hero {
@@ -1429,39 +1261,6 @@ textarea {
   top: 14px;
   right: 14px;
   color: #fbbf24;
-}
-
-.admin-metric {
-  justify-content: flex-start;
-}
-
-.admin-metric > div {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, .05);
-}
-
-.admin-metric strong,
-.admin-metric small {
-  display: block;
-}
-
-.admin-request header {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.admin-request blockquote {
-  margin: 14px 0;
-  border-left: 3px solid var(--primary);
-  border-radius: 5px;
-  background: var(--bg);
-  color: var(--text-secondary);
-  padding: 12px;
 }
 
 .auth-page {
@@ -1797,7 +1596,6 @@ textarea {
   .notes-grid,
   .detail-grid,
   .form-grid,
-  .settings-grid,
   .leetcode-connect,
   .leetcode-workbench,
   .leetcode-profile {
@@ -1806,8 +1604,7 @@ textarea {
 
   .stats-grid,
   .two-col,
-  .three-col,
-  .checkbox-grid {
+  .three-col {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1819,7 +1616,6 @@ textarea {
   .profile-header-card,
   .topic-hero,
   .detail-meta,
-  .admin-request header,
   .split-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1832,7 +1628,6 @@ textarea {
 
 @media (max-width: 560px) {
   .stats-grid,
-  .checkbox-grid,
   .profile-stats-inline,
   .leetcode-metrics,
   .leetcode-difficulty,

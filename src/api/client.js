@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4200/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
 
 export function getToken() {
   return localStorage.getItem('codeshelf_token')
@@ -23,7 +23,7 @@ export async function api(path, options = {}) {
     body: options.body && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body,
   })
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error || 'Something went wrong.')
+  if (!response.ok) throw new Error(data.error || data.detail || 'Something went wrong.')
   return data
 }
 

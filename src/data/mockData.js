@@ -89,16 +89,3 @@ export const topContributors = [
   { id: 4, name: 'Priya Sharma', points: '1.4k', rank: 4 },
   { id: 5, name: 'Amit Kumar', points: '1.2k', rank: 5 },
 ]
-
-export const repos = [
-  { name: 'dsa-notes', desc: 'Comprehensive DSA notes and solutions', stars: 89, forks: 23, lang: 'C++', langColor: '#f34b7d', updated: '2 days ago' },
-  { name: 'sql-mastery', desc: 'SQL queries, joins, and advanced topics', stars: 76, forks: 18, lang: 'SQL', langColor: '#e38c00', updated: '5 days ago' },
-  { name: 'two-sum-solutions', desc: 'Multiple approaches to the Two Sum problem', stars: 32, forks: 9, lang: 'Python', langColor: '#3572a5', updated: '1 week ago' },
-  { name: 'system-design-notes', desc: 'System design interview preparation', stars: 124, forks: 41, lang: 'Markdown', langColor: '#083fa1', updated: '3 days ago' },
-]
-
-export const accessRequests = [
-  { id: 1, name: 'Rahul Sharma', email: 'rahul@example.com', github: 'github.com/rahulsharma', portfolio: 'rahul.dev', reason: 'I have been creating DSA content for three years and want to share structured notes with the community.', topics: ['DSA', 'System Design'], submittedAt: '2 hours ago' },
-  { id: 2, name: 'Pooja Singh', email: 'pooja@example.com', github: 'github.com/poojasingh', portfolio: '', reason: 'SQL expert with production database experience. I want to help learners understand joins, indexes, and query planning.', topics: ['SQL', 'Database'], submittedAt: '5 hours ago' },
-  { id: 3, name: 'Karan Mehta', email: 'karan@example.com', github: 'github.com/karanmehta', portfolio: 'karan.io', reason: 'Backend engineer who wants to contribute system design breakdowns and interview prep guides.', topics: ['System Design', 'Web Dev'], submittedAt: '1 day ago' },
-]

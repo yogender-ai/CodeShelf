@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:api": "node backend/server.js",
+    "dev:api": "cd backend-py && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node backend/server.js"
+    "start": "cd backend-py && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
