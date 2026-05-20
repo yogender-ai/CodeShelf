@@ -1,10 +1,28 @@
 # CodeShelf
 
-CodeShelf is a personal and collaborative study platform for DSA, SQL, ML, NLP, project notes, code snippets, explanations, images, summaries, and fast concept recall.
+CodeShelf is a personal coding memory and revision platform.
 
-## Run locally
+**Tagline:** Never forget what you already learned.
+
+It stores structured coding knowledge, generates revision cards, schedules spaced repetition, supports walk/travel revision, tracks streaks based on completed reviews, and can send reminder emails.
+
+## Stack
+
+- Frontend: React + Vite
+- Backend: FastAPI
+- Database: Neon PostgreSQL via SQLAlchemy
+- Migrations: Alembic
+- Auth: JWT
+- Email: Resend API, with local console fallback
+- AI: Hugging Face BART for summaries, Gemini-ready fallback endpoints for cards/explanations
+
+## Local Setup
 
 ```bash
+cp .env.example .env
+cp backend-py/.env.example backend-py/.env
+npm install
+npm run migrate
 npm run dev:api
 npm run dev
 ```
@@ -13,38 +31,44 @@ Frontend: `http://127.0.0.1:5173`
 
 API: `http://127.0.0.1:8000/api`
 
-Demo login:
+Health: `http://127.0.0.1:8000/api/health`
 
-- Email: `yogender@example.com`
-- Password: `codeshelf123`
+If `DATABASE_URL` is not set, the backend uses a local SQLite development database. For Neon, set:
 
-## Backend Features
+```env
+DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
+DATABASE_URL_SYNC=postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
+```
 
-- Email/password auth with signed local tokens
-- Notes with markdown text, code blocks, repo links, tags, topics, and image data
-- Public, private, and group visibility
-- Friend sharing by email
-- Study groups with members and shared notes
-- Search by title, topic, tag, content, and code
-- Offline summaries and instant concept recall
-- LeetCode profile sync, recent accepted import, solution Markdown publishing, and optional repo export
-
-## LeetCode Sync
-
-Open `/leetcode`, connect a LeetCode username, and sync recent accepted problems into CodeShelf notes. Use username `demo` for an offline sample profile.
-
-Accepted problems and published solutions are saved as Markdown in `backend/data/leetcode`. To also write them into another local git repo, start the API with:
+Then run:
 
 ```bash
-LEETCODE_REPO_PATH=/path/to/your/repo LEETCODE_AUTO_PUSH=true npm run dev:api
+npm run migrate
 ```
 
-PowerShell:
+## MVP Modules
 
-```powershell
-$env:LEETCODE_REPO_PATH="A:\path\to\your\repo"; $env:LEETCODE_AUTO_PUSH="true"; npm run dev:api
-```
+- Knowledge Library: concept, problem, mistake, command, interview, and quick recall notes
+- Problem Tracker: status, pattern, approach, code, mistake, complexity, next review date
+- Mistake Book: wrong logic, correct logic, reason, prevention tip, repeated count
+- Revision Engine: due cards, spaced repetition ratings, review logs
+- Today Revision: show answer, forgot/hard/good/easy ratings, streak progress
+- Walk Mode: large text and browser text-to-speech
+- Travel Mode: localStorage offline pack and progress sync
+- Email Reminders: preferences, preview, test/daily send through Resend or local print
+- AI endpoints: summary, card generation fallback, email preview, walk explanations
 
-When `OPENROUTER_API_KEY` or `GEMINI_API_KEY` is set, CodeShelf asks the model to format solution posts into a cleaner `.md` structure. Without keys, it uses the built-in Markdown template.
+## Deployment
 
-The local FastAPI backend is in `backend-py/app/main.py`, and the local database is stored at `backend/data/codeshelf.json`.
+Frontend on Vercel:
+
+- Set `VITE_API_BASE_URL=https://your-render-api.onrender.com/api`
+
+Backend on Render:
+
+- Use `backend-py/render.yaml`
+- Set Neon `DATABASE_URL` and `DATABASE_URL_SYNC`
+- Set `JWT_SECRET`, `FRONTEND_URL`, and optional `RESEND_API_KEY`, `GEMINI_API_KEY`, `HF_API_KEY`
+- Render build runs Alembic migrations before starting FastAPI
+
+Daily reminder emails can be triggered with a Render Cron Job calling `/api/email/send-daily` for the intended user/session flow, or extended later with a service-token batch endpoint.

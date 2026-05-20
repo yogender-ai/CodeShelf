@@ -1,5 +1,5 @@
-import { Plus, Upload as UploadIcon, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Brain, Sparkles, X } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CodeMirror from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
@@ -7,99 +7,96 @@ import { python } from '@codemirror/lang-python'
 import { sql } from '@codemirror/lang-sql'
 import { cpp } from '@codemirror/lang-cpp'
 import { vscodeDark } from '@uiw/codemirror-theme-vscode'
-import { groupsApi, notesApi } from '../api/client.js'
+import { aiApi, notesApi } from '../api/client.js'
+
+const noteTypes = ['Concept Note', 'Problem Note', 'Mistake Note', 'Command Note', 'Interview Note', 'Quick Recall Card']
 
 export default function Upload() {
   const navigate = useNavigate()
-  const [tags, setTags] = useState(['DSA', 'Revision'])
+  const [tags, setTags] = useState(['revision'])
   const [tagInput, setTagInput] = useState('')
-  const [groups, setGroups] = useState([])
   const [error, setError] = useState('')
-  const [images, setImages] = useState([])
+  const [status, setStatus] = useState('')
   const [form, setForm] = useState({
     title: '',
-    description: '',
-    topic: 'DSA',
-    type: 'Note',
-    difficulty: 'Medium',
     content: '',
-    repo: '',
-    visibility: 'private',
-    groupIds: [],
+    note_type: 'Concept Note',
+    topic: 'DSA',
+    subtopic: '',
+    difficulty: 'Medium',
+    source: '',
+    source_url: '',
+    code_snippet: '',
+    language: 'cpp',
+    summary: '',
+    generate_cards: true,
   })
 
-  useEffect(() => {
-    groupsApi.list().then((data) => setGroups(data.groups)).catch(() => setGroups([]))
-  }, [])
-
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
   const addTag = () => {
     const clean = tagInput.trim()
     if (clean && !tags.includes(clean)) setTags([...tags, clean])
     setTagInput('')
   }
 
+  async function summarize() {
+    setStatus('Summarizing...')
+    const data = await aiApi.summarizeNote({ text: form.content, title: form.title, topic: form.topic })
+    update('summary', data.summary)
+    setStatus(`Summary generated with ${data.provider}.`)
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
     try {
-      const data = await notesApi.create({ ...form, tags, images })
+      const data = await notesApi.create({ ...form, tags })
       navigate(`/note/${data.note.id}`)
     } catch (err) {
       setError(err.message)
     }
   }
 
-  function updateField(key, value) {
-    setForm((current) => ({ ...current, [key]: value }))
-  }
-
-  function handleImage(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setImages((current) => [...current, { name: file.name, dataUrl: reader.result }])
-    reader.readAsDataURL(file)
-  }
-
   return (
     <div className="page">
-      <PageTitle title="Upload Content" subtitle="Store notes with text, images, code, explanations, and group visibility" />
+      <PageTitle title="Add Learning Material" subtitle="Capture what you learned, then turn it into future recall." />
       <div className="form-grid">
         <form className="card form-card" onSubmit={handleSubmit}>
-          <Field label="Title *"><input className="input" value={form.title} onChange={(event) => updateField('title', event.target.value)} placeholder="Dynamic Programming - Complete Guide" /></Field>
-          <Field label="Description *"><textarea className="input" value={form.description} onChange={(event) => updateField('description', event.target.value)} rows="3" placeholder="A short summary of what this note covers..." /></Field>
+          <Field label="Title *"><input className="input" value={form.title} onChange={(e) => update('title', e.target.value)} placeholder="Container With Most Water pointer rule" /></Field>
+          <div className="three-col">
+            <Field label="Type"><select className="input" value={form.note_type} onChange={(e) => update('note_type', e.target.value)}>{noteTypes.map((type) => <option key={type}>{type}</option>)}</select></Field>
+            <Field label="Topic"><input className="input" value={form.topic} onChange={(e) => update('topic', e.target.value)} placeholder="DSA, SQL, DevOps" /></Field>
+            <Field label="Difficulty"><select className="input" value={form.difficulty} onChange={(e) => update('difficulty', e.target.value)}><option>Easy</option><option>Medium</option><option>Hard</option></select></Field>
+          </div>
+          <Field label="Subtopic / Pattern"><input className="input" value={form.subtopic} onChange={(e) => update('subtopic', e.target.value)} placeholder="Two pointers, joins, Docker volumes..." /></Field>
+          <Field label="Content *">
+            <CodeMirror value={form.content} height="280px" theme={vscodeDark} extensions={[javascript({ jsx: true }), python(), sql(), cpp()]} onChange={(val) => update('content', val)} />
+          </Field>
           <div className="two-col">
-            <Field label="Topic *"><select className="input" value={form.topic} onChange={(event) => updateField('topic', event.target.value)}><option>DSA</option><option>SQL</option><option>ML</option><option>NLP</option><option>Projects</option><option>Concepts</option></select></Field>
-            <Field label="Type *"><select className="input" value={form.type} onChange={(event) => updateField('type', event.target.value)}><option>Note</option><option>Question Set</option><option>Concept</option><option>Project</option><option>Code Explanation</option></select></Field>
+            <Field label="Source"><input className="input" value={form.source} onChange={(e) => update('source', e.target.value)} placeholder="LeetCode, docs, course..." /></Field>
+            <Field label="Source URL"><input className="input" value={form.source_url} onChange={(e) => update('source_url', e.target.value)} placeholder="https://..." /></Field>
           </div>
           <div className="two-col">
-            <Field label="Difficulty"><select className="input" value={form.difficulty} onChange={(event) => updateField('difficulty', event.target.value)}><option>Easy</option><option>Medium</option><option>Hard</option></select></Field>
-            <Field label="Visibility"><select className="input" value={form.visibility} onChange={(event) => updateField('visibility', event.target.value)}><option value="private">Private</option><option value="group">Group</option><option value="public">Public</option></select></Field>
+            <Field label="Language"><input className="input" value={form.language} onChange={(e) => update('language', e.target.value)} /></Field>
+            <Field label="Generate cards"><select className="input" value={String(form.generate_cards)} onChange={(e) => update('generate_cards', e.target.value === 'true')}><option value="true">Yes</option><option value="false">No</option></select></Field>
           </div>
-          <Field label="Group"><select className="input" value={form.groupIds[0] || ''} onChange={(event) => updateField('groupIds', event.target.value ? [event.target.value] : [])}><option value="">No group</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></Field>
+          <Field label="Code Snippet"><textarea className="input mono" rows="6" value={form.code_snippet} onChange={(e) => update('code_snippet', e.target.value)} placeholder="Optional code, command, or SQL snippet" /></Field>
           <Field label="Tags">
             <div className="tag-input">
               {tags.map((tag) => <span key={tag}>{tag}<X size={12} onClick={() => setTags(tags.filter((item) => item !== tag))} /></span>)}
-              <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), addTag())} placeholder="Add tag..." />
+              <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} placeholder="Add tag..." />
             </div>
           </Field>
-          <Field label="Content (Markdown, SQL, and code supported) *">
-            <CodeMirror
-              value={form.content}
-              height="350px"
-              theme={vscodeDark}
-              extensions={[javascript({ jsx: true }), python(), sql(), cpp()]}
-              onChange={(val) => updateField('content', val)}
-              style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', fontSize: '14px' }}
-            />
-          </Field>
-          <Field label="GitHub Repository (optional)"><input className="input" value={form.repo} onChange={(event) => updateField('repo', event.target.value)} placeholder="https://github.com/username/repo" /></Field>
+          <Field label="Revision Summary"><textarea className="input" rows="3" value={form.summary} onChange={(e) => update('summary', e.target.value)} /></Field>
           {error ? <p className="form-error">{error}</p> : null}
-          <div className="form-actions"><button type="button" className="btn btn-secondary">Save as Draft</button><button className="btn btn-primary"><UploadIcon size={16} /> Publish Note</button></div>
+          {status ? <p className="recall-answer">{status}</p> : null}
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={summarize}><Sparkles size={16} /> Summarize</button>
+            <button className="btn btn-primary"><Brain size={16} /> Save and Generate Cards</button>
+          </div>
         </form>
         <aside className="side-stack">
-          <section className="card"><h3>Guidelines</h3><ul className="check-list"><li>Use clear titles</li><li>Add relevant tags</li><li>Include code examples</li><li>Link your GitHub repo</li></ul></section>
-          <section className="card"><h3>Images</h3><label className="dropzone"><Plus size={30} /><p>Add diagrams or screenshots</p><small>PNG or JPG stored with the note</small><input type="file" accept="image/*" hidden onChange={handleImage} /></label>{images.map((image) => <img className="image-preview" key={image.name} src={image.dataUrl} alt={image.name} />)}</section>
+          <section className="card"><h3>Good Revision Inputs</h3><ul className="check-list"><li>Write the mistake or rule plainly</li><li>Add the exact code or command</li><li>Use topics you want to filter later</li><li>Let cards be generated automatically</li></ul></section>
         </aside>
       </div>
     </div>

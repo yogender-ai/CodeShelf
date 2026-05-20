@@ -1,60 +1,51 @@
-"""
-CodeShelf Backend — Application Settings
-
-Loads configuration from environment variables / .env file.
-Uses pydantic-settings for validation and type coercion.
-"""
-
 from __future__ import annotations
 
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# Resolve the .env file relative to the project root (two levels up from this file)
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_ENV_FILE = _PROJECT_ROOT / ".env"
+ROOT_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from .env or environment variables."""
-
     model_config = SettingsConfigDict(
-        env_file=str(_ENV_FILE),
+        env_file=str(ROOT_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
-    # ── Database ──────────────────────────────────────────────────────
-    database_url: str  # postgresql+asyncpg://...
-    database_url_sync: str = ""  # postgresql://... (for Alembic)
+    database_url: str = "sqlite+aiosqlite:///./codeshelf_dev.db"
+    database_url_sync: str = ""
 
-    # ── JWT ───────────────────────────────────────────────────────────
     jwt_secret: str = "codeshelf-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expiry_days: int = 14
 
-    # ── CORS ──────────────────────────────────────────────────────────
-    backend_cors_origins: str = "http://localhost:5173,http://localhost:3000"
-
-    # ── Server ────────────────────────────────────────────────────────
+    backend_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
+    frontend_url: str = "http://127.0.0.1:5173"
+    environment: str = "development"
     port: int = 8000
+
+    resend_api_key: str = ""
+    resend_from_email: str = "CodeShelf <revision@codeshelf.local>"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-1.5-flash"
+    hf_api_key: str = ""
 
     @property
     def cors_origins(self) -> list[str]:
-        """Parse comma-separated CORS origins into a list."""
         return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+
+    @property
+    def sync_database_url(self) -> str:
+        if self.database_url_sync:
+            return self.database_url_sync
+        return self.database_url.replace("+asyncpg", "").replace("+aiosqlite", "")
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """
-    Cached settings instance.
-
-    Call this instead of constructing Settings() directly so the .env
-    file is only read once per process.
-    """
-    return Settings()  # type: ignore[call-arg]
+    return Settings()

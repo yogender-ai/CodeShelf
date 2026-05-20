@@ -8,6 +8,7 @@ uvicorn[standard]==0.34.3
 # Database — async PostgreSQL via Neon DB
 sqlalchemy[asyncio]==2.0.41
 asyncpg==0.30.0
+aiosqlite==0.20.0
 greenlet==3.2.2
 
 # Migrations

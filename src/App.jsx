@@ -1,43 +1,42 @@
-import { Routes, Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import Layout from './components/layout/Layout.jsx'
 import Home from './pages/Home.jsx'
 import Explore from './pages/Explore.jsx'
 import NoteDetail from './pages/NoteDetail.jsx'
 import Upload from './pages/Upload.jsx'
-import MyContributions from './pages/MyContributions.jsx'
-import Profile from './pages/Profile.jsx'
-import TopicPage from './pages/TopicPage.jsx'
-import Community from './pages/Community.jsx'
+import EditNote from './pages/EditNote.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
-import LeetCode from './pages/LeetCode.jsx'
-import Revision from './pages/Revision.jsx'
-import EditNote from './pages/EditNote.jsx'
+import Profile from './pages/Profile.jsx'
+import TodayRevision from './pages/TodayRevision.jsx'
+import WalkMode from './pages/WalkMode.jsx'
+import TravelMode from './pages/TravelMode.jsx'
+import Problems from './pages/Problems.jsx'
+import ProblemDetail from './pages/ProblemDetail.jsx'
+import MistakeBook from './pages/MistakeBook.jsx'
+import EmailSettings from './pages/EmailSettings.jsx'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="library" element={<Explore />} />
         <Route path="explore" element={<Explore />} />
-        <Route path="note/:id" element={<NoteDetail />} />
+        <Route path="add-note" element={<Upload />} />
         <Route path="upload" element={<Upload />} />
+        <Route path="note/:id" element={<NoteDetail />} />
         <Route path="edit/:id" element={<EditNote />} />
-        <Route path="my-contributions" element={<MyContributions />} />
+        <Route path="revision/today" element={<TodayRevision />} />
+        <Route path="walk-mode" element={<WalkMode />} />
+        <Route path="travel-mode" element={<TravelMode />} />
+        <Route path="problems" element={<Problems />} />
+        <Route path="problems/:id" element={<ProblemDetail />} />
+        <Route path="mistakes" element={<MistakeBook />} />
+        <Route path="email-settings" element={<EmailSettings />} />
         <Route path="profile" element={<Profile />} />
-        <Route path="community" element={<Community />} />
-        <Route path="leetcode" element={<LeetCode />} />
-        <Route path="dsa" element={<TopicPage topic="DSA Notes" color="#8b5cf6" />} />
-        <Route path="sql" element={<TopicPage topic="SQL Notes" color="#10b981" />} />
-        <Route path="ml" element={<TopicPage topic="ML Notes" color="#3b82f6" />} />
-        <Route path="nlp" element={<TopicPage topic="NLP Notes" color="#ec4899" />} />
-        <Route path="concepts" element={<TopicPage topic="Concepts" color="#f59e0b" />} />
-        <Route path="questions" element={<TopicPage topic="Questions" color="#ec4899" />} />
-        <Route path="repos" element={<TopicPage topic="Repositories" color="#3b82f6" />} />
-        <Route path="revise/:topic" element={<Revision />} />
       </Route>
     </Routes>
   )

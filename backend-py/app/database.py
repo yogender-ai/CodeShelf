@@ -1,59 +1,34 @@
-"""
-CodeShelf Backend — Async Database Engine & Session Factory
-
-Creates an async SQLAlchemy engine connected to Neon DB (serverless Postgres)
-and provides a FastAPI-compatible dependency for request-scoped sessions.
-"""
-
 from __future__ import annotations
 
 from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
 
+
 settings = get_settings()
 
-# ── Async Engine ──────────────────────────────────────────────────────
-# Neon DB is serverless, so we keep the pool small and enable pre-ping
-# to gracefully handle connections that were closed while idle.
-# asyncpg doesn't accept 'sslmode' as a URL query param — strip it and
-# pass SSL via connect_args instead.
-_db_url = settings.database_url.replace("?sslmode=require", "").replace("&sslmode=require", "")
-engine = create_async_engine(
-    _db_url,
-    echo=False,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,
-    pool_recycle=300,  # Recycle connections every 5 min (Neon idle timeout)
-    connect_args={
-        "ssl": "require",  # Neon requires SSL
-    },
-)
 
-# ── Session Factory ───────────────────────────────────────────────────
-async_session_factory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+def _engine_kwargs(url: str) -> dict:
+    if url.startswith("postgresql"):
+        clean_url = url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+        return {
+            "url": clean_url,
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+            "connect_args": {"ssl": "require"} if "neon.tech" in url or "sslmode=require" in url else {},
+        }
+    return {"url": url, "connect_args": {"check_same_thread": False} if url.startswith("sqlite") else {}}
+
+
+engine = create_async_engine(**_engine_kwargs(settings.database_url), echo=False)
+async_session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """
-    FastAPI dependency that yields a request-scoped async session.
-
-    Usage:
-        @router.get("/items")
-        async def list_items(db: AsyncSession = Depends(get_db)):
-            ...
-    """
     async with async_session_factory() as session:
         try:
             yield session
@@ -61,5 +36,3 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()

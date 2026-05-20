@@ -1,14 +1,4 @@
-"""
-CodeShelf — FastAPI Dependencies
-
-Provides `get_current_user` — a reusable dependency that extracts and
-validates the JWT Bearer token from the Authorization header and returns
-the authenticated User ORM object.
-"""
-
 from __future__ import annotations
-
-import uuid
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -19,40 +9,21 @@ from app.database import get_db
 from app.jwt_utils import decode_token
 from app.models import User
 
-# ── Bearer token extractor ────────────────────────────────────────────
-bearer_scheme = HTTPBearer()
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """
-    FastAPI dependency that resolves the current authenticated user.
-
-    Usage:
-        @router.get("/protected")
-        async def protected(user: User = Depends(get_current_user)):
-            ...
-    """
-    token = credentials.credentials
-    user_id = decode_token(token, expected_type="access")
-
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired access token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+    if credentials is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated.")
+    user_id = decode_token(credentials.credentials)
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found.")
     return user
